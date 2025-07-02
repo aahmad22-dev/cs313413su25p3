@@ -1,5 +1,7 @@
 package edu.luc.etl.cs313.android.shapes.model;
 
+import java.util.List;
+
 /**
  * A shape visitor for calculating the bounding box, that is, the smallest
  * rectangle containing the shape. The resulting bounding box is returned as a
@@ -17,38 +19,84 @@ public class BoundingBox implements Visitor<Location> {
 
     @Override
     public Location onFill(final Fill f) {
-        return null;
+        return f.getShape().accept(this);
     }
 
     @Override
     public Location onGroup(final Group g) {
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
 
-        return null;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+
+        for (int i = 0; i < g.getShapes().size(); i ++) {
+            Location loc = g.getShapes().get(i).accept(this);
+            int x = loc.getX();
+            int y = loc.getY();
+            Rectangle r = (Rectangle) loc.getShape();
+
+            minX = Math.min(maxX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + r.getWidth());
+            maxY = Math.max(maxY, y + r.getHeight());
+        }
+        int width = maxX - minX;
+        int height = maxY = minY;
+        return new Location(minX, minY, new Rectangle(width, height));
     }
 
     @Override
     public Location onLocation(final Location l) {
+        // Visit the inner shape to get its bounding box
+        Location innerBox = l.getShape().accept(this);
 
-        return null;
+        //Offset the inner bounding box by the location's x/y
+        int newX = l.getX() + innerBox.getX();
+        int newY = l.getY() + innerBox.getY();
+        return new Location(newX, newY, innerBox.getShape());
     }
 
     @Override
     public Location onRectangle(final Rectangle r) {
-        return null;
+        //top left corner x = 0, y = 0
+        //r is the shape itself
+        return new Location(0, 0, r);
     }
 
     @Override
     public Location onStrokeColor(final StrokeColor c) {
-        return null;
+        return c.getShape().accept(this);
     }
 
     @Override
     public Location onOutline(final Outline o) {
-        return null;
+        return o.getShape().accept(this);
     }
 
     @Override
     public Location onPolygon(final Polygon s) {
-        return null;
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+//        List<Point> points = s.getPoints();
+        for(int i = 0; i < s.getPoints().size(); i++) {
+            Point p = s.getPoints().get(i);
+            int x = p.getX();
+            int y = p.getY();
+            if(x < minX) minX = x;
+            if(y < minY) minX = y;
+
+            if(x > maxX) maxX = x;
+            if(y > maxY) maxY = y;
+        }
+
+        int width = maxX - maxX;
+        int height = maxY - minY;
+        return new Location(minX, minY, new Rectangle(width, height));
     }
 }
