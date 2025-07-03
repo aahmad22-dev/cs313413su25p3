@@ -24,6 +24,9 @@ public class BoundingBox implements Visitor<Location> {
 
     @Override
     public Location onGroup(final Group g) {
+        if(g.getShapes().isEmpty()) {
+            return new Location(0, 0, new Rectangle(0, 0));
+        }
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
 
@@ -43,7 +46,7 @@ public class BoundingBox implements Visitor<Location> {
             int w = ((Rectangle) loc.getShape()).getWidth();
             int h = ((Rectangle) loc.getShape()).getHeight();
 
-            minX = Math.min(maxX, x);
+            minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x + w);
             maxY = Math.max(maxY, y + h);
@@ -61,9 +64,15 @@ public class BoundingBox implements Visitor<Location> {
         Location innerBox = l.getShape().accept(this);
 
         //Offset the inner bounding box by the location's x/y
-        int newX = l.getX() + innerBox.getX();
-        int newY = l.getY() + innerBox.getY();
-        return new Location(newX, newY, innerBox.getShape());
+
+        int offsetX = l.getX() + innerBox.getX();
+        int offsetY = l.getY() + innerBox.getY();
+        Rectangle r = (Rectangle) innerBox.getShape();
+        return new Location(offsetX, offsetY, r);
+
+//        int newX = l.getX() + innerBox.getX();
+//        int newY = l.getY() + innerBox.getY();
+//        return new Location(newX, newY, innerBox.getShape());
     }
 
     @Override
@@ -96,14 +105,20 @@ public class BoundingBox implements Visitor<Location> {
             Point p = s.getPoints().get(i);
             int x = p.getX();
             int y = p.getY();
+
+//            minX = Math.min(minX, x);
+//            minY = Math.min(minY, y);
+//
+//            maxX = Math.max(maxX, x);
+//            maxY = Math.max(maxY, y);
             if(x < minX) minX = x;
-            if(y < minY) minX = y;
+            if(y < minY) minY = y;
 
             if(x > maxX) maxX = x;
             if(y > maxY) maxY = y;
         }
 
-        int width = maxX - maxX;
+        int width = maxX - minX;
         int height = maxY - minY;
         return new Location(minX, minY, new Rectangle(width, height));
     }
