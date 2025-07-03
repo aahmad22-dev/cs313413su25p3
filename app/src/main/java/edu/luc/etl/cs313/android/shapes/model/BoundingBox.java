@@ -33,18 +33,26 @@ public class BoundingBox implements Visitor<Location> {
 
         for (int i = 0; i < g.getShapes().size(); i ++) {
             Location loc = g.getShapes().get(i).accept(this);
+            if (loc == null) continue; // skip is not handled
+//            int x = loc.getX();
+//            int y = loc.getY();
+//            Rectangle r = (Rectangle) loc.getShape();
+
             int x = loc.getX();
             int y = loc.getY();
-            Rectangle r = (Rectangle) loc.getShape();
+            int w = ((Rectangle) loc.getShape()).getWidth();
+            int h = ((Rectangle) loc.getShape()).getHeight();
 
             minX = Math.min(maxX, x);
             minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x + r.getWidth());
-            maxY = Math.max(maxY, y + r.getHeight());
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+//            maxX = Math.max(maxX, x + r.getWidth());
+//            maxY = Math.max(maxY, y + r.getHeight());
         }
-        int width = maxX - minX;
-        int height = maxY = minY;
-        return new Location(minX, minY, new Rectangle(width, height));
+//        int width = maxX - minX;
+//        int height = maxY = minY;
+        return new Location(minX, minY, new Rectangle(maxX - minX, maxY - minY));
     }
 
     @Override
