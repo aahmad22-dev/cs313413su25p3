@@ -36,11 +36,19 @@ public class DrawWidget extends View {
     @Override
     @SuppressLint("DrawAllocation")
     protected void onDraw(final Canvas canvas) {
-        final var shape = Fixtures.simpleCircle;
-        final var b = shape.accept(new BoundingBox());
-        canvas.translate(-b.getX(), -b.getY());
-        b.accept(new Draw(canvas, paint));
-        shape.accept(new Draw(canvas, paint));
-        canvas.translate(b.getX(), b.getY());
+        final Shape original = Fixtures.complexGroup; // or simpleCircle for test
+        final Location b = original.accept(new BoundingBox());
+
+        // Wrap the original shape in a location that offsets it
+        final Location shifted = new Location(-b.getX(), -b.getY(), original);
+
+        shifted.accept(new Draw(canvas, paint));
+
+//        final var shape = Fixtures.simpleCircle;
+//        final var b = shape.accept(new BoundingBox());
+//        canvas.translate(-b.getX(), -b.getY());
+//        b.accept(new Draw(canvas, paint));
+//        shape.accept(new Draw(canvas, paint));
+//        canvas.translate(b.getX(), b.getY());
     }
 }

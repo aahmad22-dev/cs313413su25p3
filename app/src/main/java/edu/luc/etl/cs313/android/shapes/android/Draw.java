@@ -40,32 +40,29 @@ public class Draw implements Visitor<Void> {
     @Override
     public Void onFill(final Fill f) {
         final Paint.Style previousStyle = paint.getStyle();
-        paint.setStyle(Style.FILL);
+        paint.setStyle(Style.FILL_AND_STROKE);
         f.getShape().accept(this);
         paint.setStyle(previousStyle);
         return null;
     }
 
+
     @Override
     public Void onGroup(final Group g) {
-        final java.util.List<?extends Shape> shapes = g.getShapes();
-        for (int i = 0; i < shapes.size(); i++) {
-            shapes.get(i).accept(this);
+        for (int i = 0; i < g.getShapes().size(); i++) {
+            g.getShapes().get(i).accept(this);
         }
         return null;
     }
 
     @Override
     public Void onLocation(final Location l) {
-        //saves the canvas' current transform
-        canvas.save();
-        //moves the drawing origin
         canvas.translate(l.getX(), l.getY());
         l.getShape().accept(this);
-        //resets to the saved transform so other shapes arent affected
-        canvas.restore();
+        canvas.translate(-l.getX(), -l.getY());  // restore original state
         return null;
     }
+
 
     @Override
     public Void onRectangle(final Rectangle r) {
@@ -75,18 +72,21 @@ public class Draw implements Visitor<Void> {
 
     @Override
     public Void onOutline(Outline o) {
-        final Paint.Style previousStyle = paint.getStyle();
+        final Style previousStyle = paint.getStyle();
 
-        //fill first
-        paint.setStyle(Style.FILL);
-        o.getShape().accept(this);
-
-        //stroke
         paint.setStyle(Style.STROKE);
         o.getShape().accept(this);
-
-        // restore previous style
         paint.setStyle(previousStyle);
+//        //fill first
+//        paint.setStyle(Style.FILL);
+//        o.getShape().accept(this);
+//
+//        //stroke
+//        paint.setStyle(Style.STROKE);
+//        o.getShape().accept(this);
+//
+//        // restore previous style
+//        paint.setStyle(previousStyle);
 
         return null;
     }
@@ -96,12 +96,17 @@ public class Draw implements Visitor<Void> {
         final java.util.List<? extends Point> points = p.getPoints();
         if (points.size() < 2) return null;
 
+        final float[] pts = new float[points.size() * 4];
         for (int i = 0; i < points.size(); i++) {
             final Point p1 = points.get(i);
-            final Point p2 = points.get((i + 1) % points.size()); // wrap around to the first
-            canvas.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY(), paint);
+            final Point p2 = points.get((i + 1) % points.size()); // wraps to first point
+            pts[i * 4] = p1.getX();
+            pts[i * 4 + 1] = p1.getY();
+            pts[i * 4 + 2] = p2.getX();
+            pts[i * 4 + 3] = p2.getY();
         }
 
+        canvas.drawLines(pts, paint);
         return null;
     }
 }
